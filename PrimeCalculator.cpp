@@ -65,10 +65,10 @@ void procuraPrimosIniciais(){
     output.close();
 }
 
-PRIME_TYPE possiveisPrimos[1000000];
+PRIME_TYPE possiveisPrimos[10000000];
 void procuraPossiveiPrimos(){
-    const int MASK_FORCE = 7;
-    int totToSearch =8, sizeMask = 0;
+    const int MASK_FORCE = 8;
+    PRIME_TYPE totToSearch =1, sizeMask = 0;
 
     for(int x=0;x<MASK_FORCE;x++){
         totToSearch*=primeirosPrimos[x];
@@ -80,7 +80,7 @@ void procuraPossiveiPrimos(){
     PRIME_TYPE *mask = (PRIME_TYPE *) malloc(sizeof(PRIME_TYPE)*sizeMask);
     PRIME_TYPE index= 0,primos=0;
     bool find;
-    for(int x=1;x<totToSearch;x++){
+    for(int x=0;x<totToSearch;x++){
         find =true;
         for(int y=0;y<MASK_FORCE;y++){
             if(x%primeirosPrimos[y]==0){
@@ -88,9 +88,12 @@ void procuraPossiveiPrimos(){
                 break;
             }
         }
-        if(find)
+        if(find){
             mask[index++] = x; 
+            //printf("%d | ",mask[index-1]);
+        }
     }
+    printf("\n");
 
     PRIME_TYPE start = totToSearch;
     while(primos<1024){
@@ -118,11 +121,19 @@ void ordenaESalvaPrimosDesordenados(){
 
 
 
+void iniciaDoZero(){
+    procuraPrimosIniciais();
+    procuraPossiveiPrimos();
+}
+
+
+void reiniciaBusca(){
+
+}
 
 
 int main() {
-    procuraPrimosIniciais();
-    procuraPossiveiPrimos();
+    iniciaDoZero();
     //for(int x=0;x<100;x++){
     //    printf("Primo %d = %u\n",x,primeirosPrimos[x]);
     //}
