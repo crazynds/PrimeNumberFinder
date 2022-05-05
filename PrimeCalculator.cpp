@@ -7,6 +7,7 @@
 //============================================================================
 
 #include "AsmFunctions.h"
+#include "immintrin.h"
 #include <iostream>
 #include <fstream>
 #include <iterator>
@@ -33,6 +34,8 @@ using namespace std;
 
 #define PRIMEIROS_PRIMOS 10000
 #define PRIME_TYPE unsigned long long
+#define MASK_FORCE 5
+
 
 PRIME_TYPE primeirosPrimos[PRIMEIROS_PRIMOS];
 
@@ -65,11 +68,8 @@ void procuraPrimosIniciais(){
     output.close();
 }
 
-PRIME_TYPE possiveisPrimos[10000000];
 void procuraPossiveiPrimos(){
-    const int MASK_FORCE = 8;
     PRIME_TYPE totToSearch =1, sizeMask = 0;
-
     for(int x=0;x<MASK_FORCE;x++){
         totToSearch*=primeirosPrimos[x];
     }
@@ -78,6 +78,7 @@ void procuraPossiveiPrimos(){
         sizeMask-= sizeMask/primeirosPrimos[x];
     }
     PRIME_TYPE *mask = (PRIME_TYPE *) malloc(sizeof(PRIME_TYPE)*sizeMask);
+    PRIME_TYPE *possiveisPrimos= (PRIME_TYPE *) malloc(sizeof(PRIME_TYPE)*sizeMask);
     PRIME_TYPE index= 0,primos=0;
     bool find;
     for(int x=0;x<totToSearch;x++){
@@ -89,21 +90,31 @@ void procuraPossiveiPrimos(){
             }
         }
         if(find){
-            mask[index++] = x; 
+            mask[index++] = x;
             //printf("%d | ",mask[index-1]);
         }
     }
     printf("\n");
 
+    // Carrego 8 * o size mask para dentro do vetor de possiveisPrimos
     PRIME_TYPE start = totToSearch;
-    while(primos<1024){
-        for(int x=0;x<index;x++){
-            PRIME_TYPE aux = start+mask[x];
-            possiveisPrimos[primos++] = aux;
+    PRIME_TYPE *vector = (PRIME_TYPE*)malloc(sizeof(PRIME_TYPE)*4);
+    while(primos<sizeMask*8){
+	for(int x=0;x<4;x++)
+            vector[x]=start;
+	__m256i baseVector = _mm256_load_si256((__m256i const *)vector);
+	__m256i responseVector;
+        for(int x=0;x<sizeMask;x+=4){
+	    __m256i utilityVector = _mm256_load_si256((__m256i const*)&mask[x]);
+            responseVector = _mm256_add_epi64(baseVector,utilityVector);
+	    _mm256_store_si256((__m256i*)&possiveisPrimos[x],responseVector);
+	    //PRIME_TYPE aux = start+mask[x];
+            //possiveisPrimos[primos++] = aux;
         }
         start+=totToSearch;
     }
     free(mask);
+    free(possiveisPrimos);
 
     printf("Tamanho mask: %d | Total slot: %d\n",sizeMask,totToSearch);
     printf("Encontrado %d na mascara\n",index);
